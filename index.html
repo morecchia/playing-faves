@@ -1,0 +1,95 @@
+<!doctype html>
+<html>
+<head>
+
+<meta charset=utf-8>
+<title>|||||||Playing Favorites</title>
+
+<link rel=stylesheet type="text/css" href="css/style.css">
+<link rel=stylesheet type="text/css" href="css/soundcloud-player/jquery-ui-1.9.2.custom.css">
+
+<script type="text/javascript" src="http://connect.soundcloud.com/sdk.js"></script>
+<script type="text/javascript" src="lib/handlebars-1.0.rc.1.js"></script>
+<script type="text/javascript" src="lib/jquery-1.8.3.js"></script>
+<script type="text/javascript" src="lib/jquery-ui-1.9.2.custom.js"></script>
+<script type="text/javascript" src="js/soundcloud.js"></script>
+<script type="text/javascript" src="js/lightbox.js"></script>
+
+</head>
+
+<body>
+
+<div id="soundcloud">
+	<div id="items">
+		<div id="main">
+			<script id="main-template" type="text/x-handlebars-template">
+			{{#each this}}
+				<div class="gutter">
+					<div class="artwork">
+						<img class="lightbox_trigger" src="{{artwork}}" alt="{{title}}" />
+					</div>
+				</div>
+				<div class="controls">
+					<div class="toolbar">
+						<button id="play">Play</button>
+						<button id="stop">Stop</button>
+						<button id="prev">Previous</button>
+						<button id="rewind">Rewind</button>
+						<button id="fastfwd">Fast-Forward</button>
+						<button id="next">Next</button>
+						<div class="counter">
+							<span>{{duration}} / {{duration}}</span>
+						</div>
+					</div>
+
+					<div class="waveform">
+						<img src="{{waveform}}" alt="{{title}}">
+					</div>
+				</div>
+				<div class="details">
+					<span>
+						<p>{{title}}</p>
+						<small>
+							<p><strong>Genre: </strong><em>{{genre}}</em> || <strong>Tags:</strong> <em>{{tags}}</em>
+							<p>Posted by <a href="{{userlink}}" target="_blank">{{user}}</a> on {{created}}</p>
+							<p><em>{{license}}</em> || <a title="Description:<p>{{description}}</p>">Description...</a></p>
+						</small>
+					</span>
+				</div>
+			{{/each}}
+			</script>
+		</div>
+		<div id="list">
+			<script id="list-template" type="text/x-handlebars-template">
+			{{#each this}}
+				<a id="{{id}}" title="<span><p>{{title}}</p><p><small><strong>Genre: </strong><em>{{genre}}</em> || <strong>Tags: </strong><em>{{tags}}</em></p><p>Posted by {{user}} on {{created}} - <em>{{license}}</em></p></small></span>">
+					<img src="{{thumb}}">
+				</a>
+			{{/each}}
+			</script>
+		</div>
+		<div class="pagination"><p><a id="list_page">add more tracks...</a></p></div>
+	</div>
+	<div id="users">
+		<div id="following" class="userlist">
+			<p>You're following:</p>
+			<script id="following-template" type="text/x-handlebars-template">
+			{{#each this}}
+				<li title="<img class='avatar' src='{{avatar}}' /></br><span class='fav_count'>{{favorites}} favorites</span>"><a id="{{id}}">{{user}}</a></li>
+			{{/each}}
+			</script>
+		</div>
+		<div id="followers" class="userlist">
+			<p>Your followers:</p>
+			<script id="followers-template" type="text/x-handlebars-template">
+			{{#each this}}
+				<li title="<img class='avatar' src='{{avatar}}' /></br><span class='fav_count'>{{favorites}} favorites</span>"><a id="{{id}}">{{user}}</a></li>
+			{{/each}}
+			</script>
+		</div>
+		<div class="pagination"><p><a id="user_page">add more users...</a></p></div>
+	</div>
+</div>
+
+</body>
+</html>
