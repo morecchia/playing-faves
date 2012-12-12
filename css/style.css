@@ -105,7 +105,6 @@ input { padding: .2em 0 }
 #list img:active { border:1px solid orange; }
 
 #items .pagination a {
-	width:5%;
 	float:right;
 	margin-right:4em;
 }
@@ -201,7 +200,7 @@ input { padding: .2em 0 }
 
 #users .pagination a { 
 	background:none;
-	margin:0 45%;
+	margin:0 40%;
 }
 
 .fav_count { margin-left:.33em; }
@@ -210,3 +209,9 @@ input { padding: .2em 0 }
 	margin:0 1em;
 }
 .avatar:hover { border-color:black; }
+
+.current_user {
+	font-size: 9pt;
+	margin-left: 2em;
+	letter-spacing:1px;
+}
