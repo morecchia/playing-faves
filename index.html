@@ -13,7 +13,6 @@
 <script type="text/javascript" src="lib/jquery-1.8.3.js"></script>
 <script type="text/javascript" src="lib/jquery-ui-1.9.2.custom.js"></script>
 <script type="text/javascript" src="js/soundcloud.js"></script>
-<script type="text/javascript" src="js/lightbox.js"></script>
 
 </head>
 
@@ -21,43 +20,12 @@
 
 <div id="soundcloud">
 	<div id="items">
+		<div id="info">
+			<div class="userinfo">Favorites by, <span class="info_user"><a></a></span></div>
+			<div class="current_track">Currently Playing: <span class="track_name"></span> || Posted by, <span class="info_user"><a></a></span></div>
+		</div>
 		<div id="main">
-			<script id="main-template" type="text/x-handlebars-template">
-			{{#each this}}
-				<div class="gutter">
-					<div class="artwork">
-						<img class="lightbox_trigger" src="{{artwork}}" alt="{{title}}" />
-					</div>
-				</div>
-				<div class="controls">
-					<div class="toolbar">
-						<button id="play">Play</button>
-						<button id="stop">Stop</button>
-						<button id="prev">Previous</button>
-						<button id="rewind">Rewind</button>
-						<button id="fastfwd">Fast-Forward</button>
-						<button id="next">Next</button>
-						<div class="counter">
-							<span>{{duration}} / {{duration}}</span>
-						</div>
-					</div>
-
-					<div class="waveform">
-						<img src="{{waveform}}" alt="{{title}}">
-					</div>
-				</div>
-				<div class="details">
-					<span>
-						<p>{{title}}</p>
-						<small>
-							<p><strong>Genre: </strong><em>{{genre}}</em> || <strong>Tags:</strong> <em>{{tags}}</em>
-							<p>Posted by <a href="{{userlink}}" target="_blank">{{user}}</a> on {{created}}</p>
-							<p><em>{{license}}</em> || <a title="Description:<p>{{description}}</p>">Description...</a></p>
-						</small>
-					</span>
-				</div>
-			{{/each}}
-			</script>
+			<div id="player"></div>
 		</div>
 		<div id="list">
 			<script id="list-template" type="text/x-handlebars-template">

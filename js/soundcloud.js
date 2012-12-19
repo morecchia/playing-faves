@@ -8,427 +8,92 @@ $(document).ready(function () {
 	
 	var track, //the current track loaded into the player
 		latest, //the latest track
-		trackurl, //the current track's stream_url
+		track_url, //the current track's stream_url
 		user = "mporecchia", //current user
 		replacement_img = "images/sc_transparent.png", //image placeholder for tracks w/o artwork
 		list_size = 30, //num of tracks per initial user favorite list
 		user_size = 50, //number of follower/following users per initial page load
 		offset;
+	
+	var Info = {
 		
-	//create methods for streaming activity
-	var Stream = {
-		
-		init: function ( config ) {
-			
-			this.url = config.url;
-			this.template = config.template;
-			this.container = config.container;
-			
-			this.start();
-			this.load();
+		user: function(user) {
 
-		},
-		
-		attachTemplate: function() {
+			var url = "/users/" + user;
 			
-			var template = Handlebars.compile( this.template );			
-			this.container.append( template( this.items ) );	
-					
-		},
-		
-		load: function() {
+			SC.get (url, function(data) {
 			
-			var self = this;
+				$(".userinfo .info_user a")
+					.text(data.username)
+						.attr("href", data.permalink_url)
+							.attr("target", "_blank");
 			
-			$(".gutter, .controls, .details").fadeOut("fast", function(){
-				$(this).remove();
-			});
-			
-			SC.get(self.url, function(json) {
-				
-				var trackArray = [json];
-				self.items = $.map(trackArray, function( track ) {
-					
-					var datestr = track.created_at,
-					date = datestr.substring(0,10);
-					
-					var duration = getDuration(track);
-					
-					var img	= track.artwork_url,
-						img_exists = img != null;
-					
-					var thumbnail = function() {
-						
-						if (img_exists) {
-						
-							var art = img.replace("large","original");
-							return art;
-							
-						} else {
-							
-							return replacement_img;
-						
-						}
-		
-					};
-					
-					var no_description = track.description == "";
-					
-					var details = function() {
-						
-						if (no_description) {
-							
-							return "None";
-						
-						} else {
-						
-							return track.description;
-						
-						}
-					
-					};
-
-					return {
-						title: track.title,
-						artwork: thumbnail(),
-						thumb: track.artwork_url,
-						url: track.permalink_url,
-						waveform: track.waveform_url,
-						id: track.id,
-						user: track.user.username,
-						userlink: track.user.permalink_url,
-						created: date,
-						description: details(),
-						duration: duration,
-						genre: track.genre,
-						tags: track.tag_list,
-						license: track.license
-					};
-					
-				});
-				
-				self.attachTemplate();
-				
-				Main.toolbar();
-				Main.description();
-				
-				var options = {
-					label: "pause",
-					icons: {
-						primary: "ui-icon-pause"
-						}
-				};
-
-				$("#play").button("option", options);
-							
 			});
 			
 		},
 		
-		startLatest: function() {
-						
-			var loaded = $(".loaded").length > 0;
+		current: function(track_url) {
 			
-			if (loaded) {
+			SC.get (track_url, function(data) {
+					
+				$(".current_track .track_name")
+					.text(data.title)
+						.attr("title", data.description);
 				
-				latest.play();
-				
-				$(".controls").removeClass("loaded");
-				
-				$("#list a:first").addClass("playing");
-				
-				$(".stopped").attr("class", "playing");
-				
-			} else {
-				
-				return false
+				$(".current_track .info_user a")
+					.text(data.user.username)
+						.attr("href", data.permalink_url)
+							.attr("target", "_blank");
 			
-			}	
-
-		},
-		
-		start: function() {
-			
-			var self = this;
-				
-			SC.stream(this.url, function(sound) {
-			
-				track = sound;					
-				sound.play();
-				
 			});
 			
-			$(".stopped").attr("class", "playing");	
-			$(".controls").removeClass("ready");	
-			
-		},
-		
-		stop: function() {
-			
-			var sc_exists = typeof track != 'undefined',
-				loaded = $(".loaded").length > 0,
-				first = $(".playing, .paused, .stopped").index() == 1;
-
-			if (loaded || first) {
-			
-				latest.stop();
-				
-				$(".playing, .paused").attr("class", "stopped");
-				$(".controls").addClass("ready");
-			
-			} else if (sc_exists) {
-				
-				track.stop();
-				
-				$(".playing, .paused").attr("class", "stopped");
-				$(".controls").addClass("ready");
-				
-			} else {
-				
-				return false;
-							
-			}
-		},
-		
-		pause: function() {
-			
-			var loaded = $(".loaded").length > 0,
-				first = $(".playing, .paused, .stopped").index() == 1;
-			
-			if (loaded || first) {
-			
-				latest.togglePause();
-				
-				$(".playing, .paused").toggleClass("playing").toggleClass("paused");
-				
-			} else {
-				
-				track.togglePause();
-				
-				$(".playing, .paused").toggleClass("playing").toggleClass("paused");
-				
-			}
 		}
-		
+	
 	};
 	
-	//create methods for populating the main div
-	var Main = {
+	//create methods for streaming activity
+	var Player = {
 		
-		init: function( config ) {
+		init: function(user) {
 			
-			this.url = config.url;
-			this.template = config.template;
-			this.container = config.container;
+			var url = "/users/" + user + "/favorites/";
 			
-			$(".gutter, .controls, .details").remove();
-			
-			this.fetch();
+			SC.get(url, {limit:1}, function(data) {
+				
+				$.map(data, function(track) {
+					
+					track_url = "/tracks/" + track.id;
+					
+					Info.current(track_url);
+					
+					var oEmbed_url = track.permalink_url;
+				
+					SC.oEmbed(oEmbed_url, function(oEmbed) {
+				
+						$("#player").html(oEmbed.html);
 
-		},
-		
-		attachTemplate: function() {
-			var template = Handlebars.compile( this.template );
-			this.container.append( template( this.items ) );
-		},
-		
-		//transport controls via jQuery UI
-		toolbar: function() {
-			
-			$("#prev").button({
+					});
 				
-				text: false,
-				icons: {
-					primary: "ui-icon-seek-start"
-					}
-			});
-				
-			$("#play").button({
-				
-				text: false,
-				icons: {	
-					primary: "ui-icon-play"
-					}
-					
-			}).click(function() {
-				
-				var stopped = $(".playing, .paused").length == 0,
-					loaded = $(".loaded").length > 0;
-				
-				if ( loaded ) {
-				
-					Stream.startLatest();
-
-				} else if ( stopped ) {
-				
-					Stream.start();
-				
-				} else {
-					
-					Stream.pause();
-					
-				}
-				
-				var options;
-					
-				if ( $( this ).text() === "play" || loaded ) {
-					options = {
-						label: "pause",
-						icons: {
-							primary: "ui-icon-pause"
-							}
-					};
-						
-				} else {
-					
-					options = {
-						label: "play",
-						icons: {
-							primary: "ui-icon-play"
-							}
-						};
-						
-					}
-					
-				$(this).button("option", options);
-					
-			});
-				
-			$("#stop").button({
-				
-				text: false,
-				icons: {
-					primary: "ui-icon-stop"
-					}
-					
-				}).click(function() {
-				
-				Stream.stop();
-					
-				$("#play").button("option", {
-					
-					label: "play",
-					icons: {
-						primary: "ui-icon-play"
-						}
-						
 				});
 				
 			});
-							
-			$("#rewind").button({
-				
-				text: false,				
-				icons: {
-					primary: "ui-icon-seek-prev"
-					}
-					
-			});
-						
-			$("#fastfwd").button({
-				
-				text: false,
-				icons: {
-					primary: "ui-icon-seek-next"
-					}
-					
-			});
-					
-			$("#next").button({
-				
-				text: false,				
-				icons: {
-					primary: "ui-icon-seek-end"
-					}
 
-			});
-			
 		},
-					
-		description: function(){
-			
-			$(".details").tooltip( { tooltipClass: "custom-tooltip" } );	
-						
-		},
-					
-		fetch: function() {
-			
-			var self = this;
-			
-			SC.get( this.url, {limit: 1}, function( data ) {
-				
-				self.items = $.map( data, function( track ) {
-					
-					trackurl = "/tracks/" + track.id;
-					
-					loadTrack();
-					
-					var datestr = track.created_at,
-					date = datestr.substring(0,10);
-					
-					var duration = getDuration(track);
-					
-					var img	= track.artwork_url,
-						img_exists = img != null;
-					
-					var thumbnail = function() {
-						
-						if (img_exists) {
-							
-							var art = img.replace("large","original");
-							return art;
-							
-						} else {
-							
-							return replacement_img;
-						
-						}
 		
-					};
-					
-					var no_description = track.description == "";
-					
-					var details = function() {
-						
-						if (no_description) {
-							
-							return "None";
-						
-						} else {
-						
-							return track.description;
-						
-						}
-					
-					};
-
-					return {
-						title: track.title,
-						artwork: thumbnail(),
-						thumb: track.artwork_url,
-						url: track.permalink_url,
-						waveform: track.waveform_url,
-						id: track.id,
-						user: track.user.username,
-						userlink: track.user.permalink_url,
-						created: date,
-						description: details(),
-						duration: duration,
-						genre: track.genre,
-						tags: track.tag_list,
-						license: track.license
-					};
-					
+		embed: function(track_url) {
+			
+			SC.get(track_url, function(track) {
+				
+				var oEmbed_url = track.permalink_url;
+				
+				SC.oEmbed(oEmbed_url, {auto_play:true}, function(oEmbed) {
+				
+					$("#player").html(oEmbed.html)
+				
 				});
 				
-				self.attachTemplate();
-				self.toolbar();
-				self.description();
-				
-				$(".controls").addClass("loaded");
-				
 			});
-			
+
 		}
 	
 	};
@@ -607,7 +272,7 @@ $(document).ready(function () {
 		fetch: function() {
 			
 			var self = this;
-			
+			console.log(this.url);
 			SC.get( this.url, {limit: list_size}, function( data ) {
 											
 				self.items = $.map( data, function( tracks ) {
@@ -696,42 +361,11 @@ $(document).ready(function () {
 		
 	};
 	
-	var User = {
+	//initialize the info bar
+	Info.user(user);
 	
-		init: function( config ) {
-		
-			this.url = config.url;
-			this.profile();
-
-		},
-	
-		profile: function() {
-			
-			var self = this;
-			
-			SC.get (this.url, function( user ) {
-				
-				return {
-				
-					user: user.username,
-					favorites: user.public_favorites_count,
-					avatar: user.avatar_url,
-					id: user.id
-				
-				};
-			
-			});
-			
-		}
-		
-	};
-	
-	//initialise the main div
-	Main.init({
-		url: "/users/" + user + "/favorites",
-		template: $('#main-template').html(),
-		container: $('#main')
-	});
+	//embed the player
+	Player.init(user);
 	
 	//initialize the tracklist
 	List.init({
@@ -750,140 +384,20 @@ $(document).ready(function () {
 		container: $('#followers')	
 	});
 	
-	//create a function to load the latest track via sm2
-	function loadTrack() {
-	
-		SC.stream(trackurl, function(sound) {
-			
-			latest = sound;
-			sound.load();
-
-		});
-	
-	};
-	
-	//create a function to get track durations in minute/seconds format
-	function getDuration(track) {
-
-		var msec = track.duration,		
-		fsec = msec / 1000,		
-		mins = Math.floor(fsec/60),		
-		dsec = (fsec % 60) + "",
-		secs = dsec.substring(0,2),
-		duration = (mins < 10 ? "0" : "" ) + mins + ":" + (secs < 10 ? "0" : "" ) + secs;
-		
-		return duration;
-	};
-	
 	$("#list").on("click", "a", function() {
 		
-		if ( $(this).is(".playing, .paused") ) {
-			
-			Stream.pause();
-			
-		} else if ( $("#list a").not( $(this) ).is(".playing, .paused, .stopped") ) {
-			
-			Stream.stop();
-			
-			Stream.init({
-				url: "/tracks/" + this.id,
-				template: $('#main-template').html(),
-				container: $('#main')
-			});
-			
-			$(this).attr("class", "playing");
-			
-			$("#list a").not( $(this) ).removeAttr("class");
-
-		} else {
-			
-			Stream.init({
-				url: "/tracks/" + this.id,
-				template: $('#main-template').html(),
-				container: $('#main')
-			});
-			
-			$(this).attr("class", "playing");
-			$(".controls").removeClass("loaded");
-			
-		}
+		var id = this.id,
+		track_url = "/tracks/" + id;
+		
+		Player.embed(track_url);
+		Info.current(track_url);
 		
 	});		
 	
-	$("#main").on("click", "#next", function() {
-		
-		var $nxt = $(".playing, .paused, .stopped").next(),
-		id = $nxt.attr('id'), loaded = $(".loaded").length > 0,
-		$second = $("#list a:first").next(), second_id = $second.attr("id"),
-		lastid = $("#list a").last().attr("id"),
-		playid = $(".playing, .paused, .stopped").attr("id");
-		
-		if (loaded) {
-
-			Stream.init({
-				url: "/tracks/" + second_id,
-				template: $('#main-template').html(),
-				container: $('#main')
-			});
-			
-			$second.addClass("playing");
-
-		} else if ( lastid == playid ) {
-		
-			return false
-		
-		} else {
-			
-			Stream.stop();
-			
-			Stream.init({
-				url: "/tracks/" + id,
-				template: $('#main-template').html(),
-				container: $('#main')
-			});
-			
-			$nxt.addClass("playing").prev().removeAttr("class");;
-			
-		}
-		
-	});
-	
-	$("#main").on("click", "#prev", function() {
-		
-		var $prev = $(".playing, .paused, .stopped").prev(),
-		id = $prev.attr('id'), loaded = $(".loaded").length > 0,
-		first = $(".playing, .paused, .stopped").index() == 1;
-
-		if (loaded || first) {
-			
-			return false;
-			
-		} else {
-			
-			Stream.stop();
-			
-			Stream.init({
-					url: "/tracks/" + id,
-					template: $('#main-template').html(),
-					container: $('#main')
-				});
-				
-			$prev.addClass("playing").next().removeAttr("class");
-		
-		}
-		
-	});
-	
+	//save for later
 	$('#username').submit(function(event){
 	
 		var userinput = $('#userinput').val();
-		
-		//initialise the main div
-		Main.init({
-			url: "/users/" + userinput + "/favorites",
-			template: $('#main-template').html(),
-			container: $('#main')
-		});
 		
 		//initialize the tracklist
 		List.init({
@@ -898,15 +412,10 @@ $(document).ready(function () {
 	$(".userlist").on("click", "a", function() {
 		
 		var user = this.id;
-			
-		Stream.stop();
 		
-		//initialize the main div
-		Main.init({
-			url: "/users/" + user + "/favorites",
-			template: $('#main-template').html(),
-			container: $('#main')
-		});
+		console.log(user);
+
+		Info.user(user);
 		
 		//initialize the tracklist
 		List.init({
@@ -915,10 +424,7 @@ $(document).ready(function () {
 			container: $('#list')
 		});
 		
-		//grab user info for later
-		User.init({
-			url: "/users/" + user
-		});
+		$('html, body').animate({scrollTop:0}, "slow");
 		
 	});
 
@@ -943,7 +449,7 @@ $(document).ready(function () {
 
 	});
 	
-	$( "input:submit, #switch_user button" ).button();
-	$("#list, #users").tooltip( { tooltipClass: "custom-tooltip" } );
+	//$("input:submit, #switch_user button").button();
+	$("#list, #users, #info").tooltip( { tooltipClass: "custom-tooltip" } );
 	
 });
