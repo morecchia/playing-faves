@@ -42,7 +42,7 @@ $(document).ready(function () {
 				
 				$(".current_track .info_user a")
 					.text(data.user.username)
-						.attr("href", data.permalink_url)
+						.attr("href", data.user.permalink_url)
 							.attr("target", "_blank");
 			
 			});
