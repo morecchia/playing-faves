@@ -3,13 +3,12 @@ $(document).ready(function () {
 	// initialize the soundcloud api
 	SC.initialize({	
 		client_id: "2170b66abbf8f1381aedd4111f5c5a12",
-		redirect_uri: "http://tonefolder.com/callback.html"
+		redirect_uri: "http://tonefolder.com/playing-faves/callback.html"
 	});
 	
 	var track, //the current track loaded into the player
-		latest, //the latest track
 		track_url, //the current track's stream_url
-		user = "mporecchia", //current user
+		user, //current user
 		replacement_img = "images/sc_transparent.png", //image placeholder for tracks w/o artwork
 		list_size = 30, //num of tracks per initial user favorite list
 		user_size = 50, //number of follower/following users per initial page load
@@ -20,7 +19,7 @@ $(document).ready(function () {
 		user: function(user) {
 
 			var url = "/users/" + user;
-			
+
 			SC.get (url, function(data) {
 			
 				$(".userinfo .info_user a")
@@ -35,7 +34,7 @@ $(document).ready(function () {
 		current: function(track_url) {
 			
 			SC.get (track_url, function(data) {
-					
+
 				$(".current_track .track_name")
 					.text(data.title)
 						.attr("title", data.description);
@@ -94,14 +93,15 @@ $(document).ready(function () {
 				
 			});
 
-		}
-	
+		},
+		
 	};
 	
 	var Following = {
 	
 		init: function ( config ) {
-			
+		
+			this.user = config.user;
 			this.template = config.template;
 			this.container = config.container;
 			
@@ -118,7 +118,7 @@ $(document).ready(function () {
 		
 			var self = this;
 			
-			SC.get("/users/" + user + "/followings", {limit: user_size}, function( data ) {
+			SC.get("/users/" + this.user + "/followings", {limit: user_size}, function( data ) {
 			
 				self.items = $.map( data, function( user ) {
 					
@@ -145,10 +145,10 @@ $(document).ready(function () {
 		},
 		
 		page: function(offset) {
-		
+			
 			var self = this;
 			
-			SC.get("/users/" + user + "/followers", {limit: user_size, offset: offset}, function( data ) {
+			SC.get("/users/" + this.user + "/followers", {limit: user_size, offset: offset}, function( data ) {
 			
 				self.items = $.map( data, function( user ) {
 					
@@ -178,7 +178,8 @@ $(document).ready(function () {
 	var Followers = {
 		
 		init: function ( config ) {
-			
+		
+			this.user = config.user;
 			this.template = config.template;
 			this.container = config.container;
 			
@@ -195,7 +196,7 @@ $(document).ready(function () {
 		
 			var self = this;
 			
-			SC.get("/users/" + user + "/followers", {limit: user_size}, function( data ) {
+			SC.get("/users/" + this.user + "/followers", {limit: user_size}, function( data ) {
 			
 				self.items = $.map( data, function( user ) {
 					
@@ -219,14 +220,21 @@ $(document).ready(function () {
 			self.attachTemplate();
 			
 			});
+			
+			$("#landing").hide("slow", "linear", function() {
+			
+				$("#soundcloud").fadeIn("slow", "linear");
+				$("footer").show();
+			
+			});
 		
 		},
 		
 		page: function(offset) {
-		
+
 			var self = this;
 			
-			SC.get("/users/" + user + "/followers", {limit: user_size, offset: offset}, function( data ) {
+			SC.get("/users/" + this.user + "/followers", {limit: user_size, offset: offset}, function( data ) {
 			
 				self.items = $.map( data, function( user ) {
 					
@@ -272,7 +280,7 @@ $(document).ready(function () {
 		fetch: function() {
 			
 			var self = this;
-			console.log(this.url);
+			
 			SC.get( this.url, {limit: list_size}, function( data ) {
 											
 				self.items = $.map( data, function( tracks ) {
@@ -294,18 +302,25 @@ $(document).ready(function () {
 						}
 		
 					};
+					
+					var embeddable = tracks.embeddable_by == "all";
 
-					return {
-						title: tracks.title,
-						id: tracks.id,
-						thumb: thumbnail(),
-						description: tracks.description,
-						user: tracks.user.username,
-						created: date,
-						genre: tracks.genre,
-						tags: tracks.tag_list,
-						license: tracks.license
-					};
+					if (embeddable) {
+					
+						return {
+							title: tracks.title,
+							id: tracks.id,
+							thumb: thumbnail(),
+							description: tracks.description,
+							user: tracks.user.username,
+							created: date,
+							genre: tracks.genre,
+							tags: tracks.tag_list,
+							license: tracks.license
+						};
+					
+					}
+					
 				});
 				
 				self.attachTemplate(); 
@@ -361,27 +376,41 @@ $(document).ready(function () {
 		
 	};
 	
-	//initialize the info bar
-	Info.user(user);
-	
-	//embed the player
-	Player.init(user);
-	
-	//initialize the tracklist
-	List.init({
-		url: "/users/" + user + "/favorites",
-		template: $('#list-template').html(),
-		container: $('#list')
-	});
-	
-	Following.init({	
-		template: $('#following-template').html(),
-		container: $('#following')	
-	});
-	
-	Followers.init({
-		template: $('#followers-template').html(),
-		container: $('#followers')	
+	$(".connect").click(function() {
+		
+		SC.connect(function() {
+			
+		  SC.get('/me', function(user) { 
+			
+			var user = user.id;
+			
+		    Info.user(user);
+
+			Player.init(user);
+
+			//initialize the tracklist
+			List.init({
+				url: "/users/" + user + "/favorites",
+				template: $('#list-template').html(),
+				container: $('#list')
+			});
+
+			Following.init({
+				user: user,
+				template: $('#following-template').html(),
+				container: $('#following')	
+			});
+
+			Followers.init({
+				user: user,
+				template: $('#followers-template').html(),
+				container: $('#followers')	
+			});
+		
+		  });
+		
+		});
+		
 	});
 	
 	$("#list").on("click", "a", function() {
@@ -394,26 +423,10 @@ $(document).ready(function () {
 		
 	});		
 	
-	//save for later
-	$('#username').submit(function(event){
-	
-		var userinput = $('#userinput').val();
-		
-		//initialize the tracklist
-		List.init({
-			url: "/users/" + userinput + "/favorites",
-			template: $('#list-template').html(),
-			container: $('#list')
-		});
-	
-		event.preventDefault();
-	});
 	
 	$(".userlist").on("click", "a", function() {
 		
 		var user = this.id;
-		
-		console.log(user);
 
 		Info.user(user);
 		
@@ -428,7 +441,7 @@ $(document).ready(function () {
 		
 	});
 
-	$("#list_page").click( function() {
+	$(".pagination").on("click", "a#list_page", function() {
 		
 		var size = $("#list a").length;
 		
@@ -438,7 +451,7 @@ $(document).ready(function () {
 
 	});
 	
-	$("a#user_page").click( function() {
+	$(".pagination").on("click", "a#user_page", function() {
 		
 		var size = $("#users a").length;
 		

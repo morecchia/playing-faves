@@ -1,6 +1,7 @@
 body {
 	font-family:"Andale Mono", AndaleMono, monospace;
 	margin:0;
+	background:#999;
 }
 
 a {
@@ -16,10 +17,47 @@ img:hover { border: 2px solid orange; }
 
 input { padding: .2em 0 }
 
+#landing {
+	width:400px;
+	overflow:hidden;
+	background:black;
+	color:#f0f0f0;
+	margin:6em auto;
+	padding:2em;
+	border-radius:10px;
+	text-align:center;
+	line-height:1.33em;
+	box-shadow: 0 8px 12px #404040;
+}
+#landing input.button { 
+	background:transparent; 
+	color:#f0f0f0;
+	padding: .33em;
+	border: 1px solid #f0f0f0;
+	border-image: none;
+	cursor:pointer;
+}
+#landing input.button:hover { 
+	color: orange;
+}
+#landing input.button:active { 
+	border: 1px solid orange;
+	background:#ccc;
+}
+#landing img { 
+	width:150px;
+	margin-bottom:.33em;
+	border:none;
+}
+#landing .connect img { width:220px; }
+
 #soundcloud { 
+	display:none;
 	width:100%;
 	overflow:auto;
 	margin:0 auto;
+	background:white;
+	min-height:1100px;
 }
 
 #soundcloud p { font-size: 10pt; }
@@ -39,13 +77,13 @@ input { padding: .2em 0 }
 }
 #items .pagination a {
 	float:right;
-	margin-right:6em;
+	margin-right:5em;
 }
 
 #info {
 	position:fixed;
 	width:100%;
-	height:1em;
+	/*height:1em;*/
 	overflow:auto;
 	padding:1em;
 	color:white;
@@ -56,12 +94,29 @@ input { padding: .2em 0 }
 #info a {color: white; text-decoration: none;}
 #info a:hover {color: orange;}
 
+.current_user {
+	font-size: 9pt;
+	margin-left: 2em;
+	letter-spacing:1px;
+}
+
+.userinfo {
+	float:left;
+	margin-left:1em;	
+}
+.current_track {
+	max-width:65%;
+	float:right;
+	margin-right:4em;
+}
+
 #main {
 	width:100%;
 	overflow: hidden;
 	background-color: #F2F2F2;
 	padding-top: 3em;
 	box-shadow: 0 4px 10px #888;
+	min-height: 210px;
 }
 
 #player {
@@ -136,34 +191,22 @@ input { padding: .2em 0 }
 	font-size: 10pt;
 }
 #users .pagination a { 
+	float:right;
+	margin-right:4em;
 	background:none;
-	margin:0 40%;
 }
 
 #following a { border:1px solid orange; }
 #following a:hover { background:white; color:blue; }
 #followers a { border:1px solid blue; }
 #followers a:hover { color:orange; background:white; }
-
-.fav_count { margin-left:.33em; }
-
-.avatar {
-	margin:0 1em;
-}
-.avatar:hover { border-color:black; }
-
-.current_user {
-	font-size: 9pt;
-	margin-left: 2em;
-	letter-spacing:1px;
+ 
+footer { 
+	display:none; 
+	width: 100%; 
+	background:black;
+	padding:.5em 0;
 }
 
-.userinfo {
-	float:left;
-	margin-left:1em;	
-}
-.current_track {
-	float:right;
-	margin-right:2em;
-}
-
+.credits { width:100px; margin:0 auto; }
+.credits img{ width:100px; margin:0 auto; border:none; }
