@@ -8,43 +8,108 @@ $(document).ready(function () {
 	
 	var track, //the current track loaded into the player
 		track_url, //the current track's stream_url
-		user, //current user
+		logged_in, //current user
 		replacement_img = "images/sc_transparent.png", //image placeholder for tracks w/o artwork
+		thumbnail,
 		list_size = 30, //num of tracks per initial user favorite list
 		user_size = 50, //number of follower/following users per initial page load
 		offset;
 	
 	var Info = {
+	
+		init: function ( config ) {
 		
-		user: function(user) {
-
-			var url = "/users/" + user;
-
-			SC.get (url, function(data) {
+			this.userid = config.userid;
+			this.template = config.template;
+			this.container = config.container;
 			
-				$(".userinfo .info_user a")
-					.text(data.username)
-						.attr("href", data.permalink_url)
-							.attr("target", "_blank");
-			
-			});
+			this.user();
+
+		},
+		
+		attachTemplate: function() {
+		
+			var template = Handlebars.compile( this.template );
+			this.container.append( template( this.info ) );
 			
 		},
 		
-		current: function(track_url) {
+		user: function() {
 			
-			SC.get (track_url, function(data) {
+			var self = this;
 
-				$(".current_track .track_name")
-					.text(data.title)
-						.attr("title", data.description);
+			var url = "/users/" + this.userid;
+			
+			SC.get (url, function(data) {
+			
+				self.info =  {
+					
+						username: data.username,
+						user_url: data.permalink_url
+					
+				};
 				
-				$(".current_track .info_user a")
-					.text(data.user.username)
-						.attr("href", data.user.permalink_url)
-							.attr("target", "_blank");
+				self.attachTemplate();
 			
 			});
+
+		},
+		
+		current: {
+		
+			init: function( config ) {
+			
+				this.url = config.url;
+				this.template = config.template;
+				this.container = config.container;
+				
+				this.info();
+				
+			},
+		
+			attachTemplate: function() {
+		
+				var template = Handlebars.compile( this.template );
+				this.container.append( template( this.trackinfo ) );
+			
+			},
+			
+			info: function() {
+				
+				var self = this;
+			
+				SC.get (this.url, function(data) {
+
+					var no_description = data.description == "";
+
+					var details = function() {
+
+						if (no_description) {
+
+							return "No description.";
+
+						} else {
+
+							return data.description;
+
+						}
+
+					};
+
+					self.trackinfo =  {
+					
+						trackname: data.title,
+						infouserurl: data.user.permalink_url,
+						infouser: data.user.username,
+						description: details()
+					
+					};
+					
+					self.attachTemplate();
+				
+				});
+			
+			}
 			
 		}
 	
@@ -62,16 +127,29 @@ $(document).ready(function () {
 				$.map(data, function(track) {
 					
 					track_url = "/tracks/" + track.id;
-					
-					Info.current(track_url);
-					
-					var oEmbed_url = track.permalink_url;
-				
-					SC.oEmbed(oEmbed_url, function(oEmbed) {
-				
-						$("#player").html(oEmbed.html);
 
+					Info.current.init({
+					
+						url: track_url,
+						template: $("#info-template").html(),
+						container: $("#current_track")
+						
 					});
+					
+					var widgetIframe = document.getElementById("sc-widget"),
+						widget = SC.Widget(widgetIframe),
+						widgetUrl = "http://w.soundcloud.com/player/?url=" + track_url;
+						
+						widget.load(widgetUrl, {
+						
+							show_artwork: false,
+							buying: false,
+							liking: false,
+							download: false
+							
+						});
+					
+					Player.artwork(track_url);
 				
 				});
 				
@@ -79,21 +157,47 @@ $(document).ready(function () {
 
 		},
 		
-		embed: function(track_url) {
+		embed: function($track) {
 			
-			SC.get(track_url, function(track) {
+			var widgetIframe = document.getElementById("sc-widget"),
+				widget = SC.Widget(widgetIframe),
+				newWidgetId = $track[0].id,
+				track_url = "/tracks/" + newWidgetId;
+				newWidgetUrl = "http://w.soundcloud.com/player/?url=" + track_url,
+				nextWidgetId = $track.next().id,
+				nextWidgetUrl = "http://w.soundcloud.com/player/?url=/tracks/" + nextWidgetId;
 				
-				var oEmbed_url = track.permalink_url;
+				console.log($track[0])
 				
-				SC.oEmbed(oEmbed_url, {auto_play:true}, function(oEmbed) {
-				
-					$("#player").html(oEmbed.html)
-				
-				});
-				
-			});
-
+				 //widget.bind(SC.Widget.Events.FINISH, function() {
+				 
+					 widget.load(newWidgetUrl, {
+					
+						show_artwork: false,
+						auto_play: true,
+						buying: false,
+						liking: false,
+						download: false
+						
+					});
+					
+				//});
+			
+			this.artwork(track_url);
+			
 		},
+		
+		artwork: function(track_url) {
+
+			SC.get(track_url, function(data) {
+			
+				thumbnail = data.artwork_url;
+				
+				$("#artwork").html("<img src='" + thumbnail + "' alt='Artwork Missing!' />");
+			
+			});
+		
+		}
 		
 	};
 	
@@ -380,34 +484,47 @@ $(document).ready(function () {
 		
 		SC.connect(function() {
 			
-		  SC.get('/me', function(user) { 
-			
-			var user = user.id;
-			
-		    Info.user(user);
+			SC.get("/me", function(user) { 
+			console.log(user);
+				var logged_in = user.id;
 
-			Player.init(user);
+				Info.init({
+					
+					userid: logged_in,
+					template: $("#user-template").html(),
+					container: $("#userinfo")
+					
+				});
 
-			//initialize the tracklist
-			List.init({
-				url: "/users/" + user + "/favorites",
-				template: $('#list-template').html(),
-				container: $('#list')
+				Player.init(logged_in);
+
+				//initialize the tracklist
+				List.init({
+				
+					url: "/users/" + logged_in + "/favorites",
+					template: $("#list-template").html(),
+					container: $("#list")
+					
+				});
+
+				Following.init({
+				
+					user: logged_in,
+					template: $("#following-template").html(),
+					container: $("#following")
+					
+				});
+
+				Followers.init({
+				
+					user: logged_in,
+					template: $("#followers-template").html(),
+					container: $("#followers")
+					
+				});
+
+
 			});
-
-			Following.init({
-				user: user,
-				template: $('#following-template').html(),
-				container: $('#following')	
-			});
-
-			Followers.init({
-				user: user,
-				template: $('#followers-template').html(),
-				container: $('#followers')	
-			});
-		
-		  });
 		
 		});
 		
@@ -415,29 +532,46 @@ $(document).ready(function () {
 	
 	$("#list").on("click", "a", function() {
 		
-		var id = this.id,
-		track_url = "/tracks/" + id;
+		$("#current_track span").remove();
+
+		var $track = $(this),
+			track_url = "/tracks/" + this.id;
 		
-		Player.embed(track_url);
-		Info.current(track_url);
+		Player.embed($track);
 		
+		Info.current.init({
+		
+			url: track_url,
+			template: $("#info-template").html(),
+			container: $("#current_track")
+			
+		});
+
 	});		
 	
 	
 	$(".userlist").on("click", "a", function() {
 		
-		var user = this.id;
-
-		Info.user(user);
+		$("#userinfo span").remove();
+		
+		var userid = this.id;
+		
+		Info.init({
+					
+			userid: userid,
+			template: $("#user-template").html(),
+			container: $("#userinfo")
+					
+		});
 		
 		//initialize the tracklist
 		List.init({
-			url: "/users/" + user + "/favorites",
-			template: $('#list-template').html(),
-			container: $('#list')
+			url: "/users/" + userid + "/favorites",
+			template: $("#list-template").html(),
+			container: $("#list")
 		});
 		
-		$('html, body').animate({scrollTop:0}, "slow");
+		$("html, body").animate({scrollTop:0}, "slow");
 		
 	});
 

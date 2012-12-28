@@ -9,9 +9,11 @@
 <link rel=stylesheet type="text/css" href="css/soundcloud-player/jquery-ui-1.9.2.custom.css">
 
 <script type="text/javascript" src="http://connect.soundcloud.com/sdk.js"></script>
+<script type="text/javascript" src="http://w.soundcloud.com/player/api.js"></script>
 <script type="text/javascript" src="lib/handlebars-1.0.rc.1.js"></script>
 <script type="text/javascript" src="lib/jquery-1.8.3.js"></script>
 <script type="text/javascript" src="lib/jquery-ui-1.9.2.custom.js"></script>
+<script type="text/javascript" src="js/lightbox.js"></script>
 <script type="text/javascript" src="js/soundcloud.js"></script>
 
 </head>
@@ -19,8 +21,8 @@
 <body>
 
 <div id="landing">
-	<p><small>Playing Favorites is a simple application that lets SoundCloud users quickly browse through their favorites, 
-		tracks 'favorited' be their followers, and tracks 'favorited' by users they are following.  All you need to play is a SoundCloud account.  
+	<p><small>Playing Favorites lets SoundCloud users quickly browse through their favorite tracks, their followers favorites, 
+	and tracks 'favorited' by users they are following.  All you need to play is a SoundCloud account.  
 		The more users you connect with, and the more tracks you like, the more fun the application becomes.</small></p> 
 	<p>To start playing favorites, </p>
 	<a class="connect"><img src="images/sc_connect.png"></a>
@@ -28,11 +30,24 @@
 <div id="soundcloud">
 	<div id="items">
 		<div id="info">
-			<div class="userinfo">Favorites by: <span class="info_user"><a></a></span></div>
-			<div class="current_track">Currently Playing: <span class="track_name"></span> || Posted by: <span class="info_user"><a></a></span></div>
+			<div id="userinfo">
+				<script id="user-template" type="text/x-handlebars-template">
+				<span>Favorites by: <a class="current_user" href="{{user_url}}" target="_blank">{{username}}</a></span>
+				</script>
+			</div>
+			<div id="current_track">
+				<script id="info-template" type="text/x-handlebars-template">
+					<span class="track_name">Currently Playing:  <a title="{{description}}">{{trackname}}</a></span>
+					<span class="track_user">Posted by: <a href="{{infouserurl}}" target="_blank">{{infouser}}</a></span>
+				</script>
+			</div>
 		</div>
 		<div id="main">
-			<div id="player"></div>
+			<div id="artwork"></div>
+			<div id="player">
+				<iframe id="sc-widget" width="100%" height="165" scrolling="no" frameborder="no" src="http://w.soundcloud.com/player/?url=http://api.soundcloud.com/tracks/67491582"></iframe>
+			</div>
+
 		</div>
 		<div id="list">
 			<script id="list-template" type="text/x-handlebars-template">
