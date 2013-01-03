@@ -54,7 +54,7 @@ input { padding: .2em 0 }
 
 #soundcloud { 
 	display:none;
-	width:1240px;
+	width:100%;
 	overflow:auto;
 	margin:0 auto;
 	background:white;
@@ -83,7 +83,7 @@ input { padding: .2em 0 }
 
 #info {
 	position:fixed;
-	width:1240px;
+	width:100%;
 	overflow:auto;
 	margin:0 auto;
 	padding:1em 0;
@@ -152,7 +152,7 @@ input { padding: .2em 0 }
 #list a {
 	display: block;
 	float: left;
-	margin: 1em .5em;
+	margin: 1em .6em;
 	box-shadow: 0 4px 10px #666;
 	width: 104px;
 	height: 104px;
@@ -202,7 +202,7 @@ input { padding: .2em 0 }
 	width: 45%;
 	overflow: auto;
 	margin-left: 2em;
-	padding: 0 1em 1em 1.33em;
+	padding: 0 1.67em 1em 0;
 	font-size: 10pt;
 }
 #users .pagination a { 
@@ -252,8 +252,7 @@ input { padding: .2em 0 }
 
 footer { 
 	display:none; 
-	width:1240px;
-	margin:0 auto;
+	width:100%;
 	background:black;
 	padding:.1em 0;
 }
