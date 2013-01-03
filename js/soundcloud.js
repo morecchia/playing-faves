@@ -149,7 +149,13 @@ $(document).ready(function () {
 							
 						});
 					
-					Player.artwork(track_url);
+					Player.artwork.init({
+			
+						url: track_url,
+						template: $("#artwork-template").html(),
+						container: $("#artwork")
+						
+					});
 				
 				});
 				
@@ -167,8 +173,6 @@ $(document).ready(function () {
 				nextWidgetId = $track.next().id,
 				nextWidgetUrl = "http://w.soundcloud.com/player/?url=/tracks/" + nextWidgetId;
 				
-				console.log($track[0])
-				
 				 //widget.bind(SC.Widget.Events.FINISH, function() {
 				 
 					 widget.load(newWidgetUrl, {
@@ -183,19 +187,73 @@ $(document).ready(function () {
 					
 				//});
 			
-			this.artwork(track_url);
+			$("#artwork img").remove();
+			
+			this.artwork.init({
+			
+				url: track_url,
+				template: $("#artwork-template").html(),
+				container: $("#artwork")
+				
+			});
 			
 		},
 		
-		artwork: function(track_url) {
-
-			SC.get(track_url, function(data) {
-			
-				thumbnail = data.artwork_url;
+		artwork: {
+		
+			init: function ( config ) {
 				
-				$("#artwork").html("<img src='" + thumbnail + "' alt='Artwork Missing!' />");
+				this.url = config.url;
+				this.template = config.template;
+				this.container = config.container;
+				
+				this.thumb();
 			
-			});
+			},
+			
+			attachTemplate: function() {
+		
+			var template = Handlebars.compile( this.template );
+			this.container.append( template( this.image ) );
+			
+			},
+		
+			thumb: function() {
+				
+				var self = this;
+				
+				SC.get(this.url, function(data) {
+					
+					self.image =  {
+					
+						thumbnail: data.artwork_url
+					
+					};
+					
+					self.attachTemplate();
+				
+				});
+			
+			},
+			
+			fullsize: function(image_src) {
+				
+				imgExists = image_src != "";
+
+				if (imgExists) {
+					
+					var art = image_src.replace("large","original");
+
+					$("#content img").attr("src", art);
+					$("#lightbox").fadeIn(500);
+
+				} else {
+
+					return false;
+
+				}
+			
+			}
 		
 		}
 		
@@ -479,13 +537,13 @@ $(document).ready(function () {
 		}
 		
 	};
-	
+
 	$(".connect").click(function() {
 		
 		SC.connect(function() {
 			
 			SC.get("/me", function(user) { 
-			console.log(user);
+
 				var logged_in = user.id;
 
 				Info.init({
@@ -596,7 +654,24 @@ $(document).ready(function () {
 
 	});
 	
-	//$("input:submit, #switch_user button").button();
+	$("#artwork").on("click", "img", function() {
+	
+		var image_src = $(this).attr("src");
+		
+		Player.artwork.fullsize(image_src);
+	
+	});
+
 	$("#list, #users, #info").tooltip( { tooltipClass: "custom-tooltip" } );
+	
+	$("#lightbox").draggable()
+			
+		.on("click", ".close", function() { 
+				
+			$(this).parent().fadeOut(500);
+					
+		});
+	
+	$("#info, #list, #users").click(function(){ $("#lightbox").fadeOut(500); });
 	
 });
