@@ -213,6 +213,8 @@ input { padding: .2em 0 }
 #users .pagination a:hover {
 	color:blue;
 }
+.avatar { width:120px; }
+.fav_count { font-size:.85em; letter-spacing:.06em; }
 
 #following a { border:1px solid orange; }
 #following a:hover { background:white; color:blue; }

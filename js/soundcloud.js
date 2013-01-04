@@ -1,4 +1,4 @@
-$(document).ready(function () {
+jQuery(document).ready(function () {
 
 	// initialize the soundcloud api
 	SC.initialize({	
@@ -7,14 +7,15 @@ $(document).ready(function () {
 	});
 	
 	var track, //the current track loaded into the player
-		track_url, //the current track's stream_url
-		logged_in, //current user
-		replacement_img = "images/sc_transparent.png", //image placeholder for tracks w/o artwork
+		trackUrl, //the current track's stream url
+		loggedIn, //current user
+		replacementImg = "images/sc_transparent.png", //image placeholder for tracks w/o artwork
 		thumbnail,
-		list_size = 30, //num of tracks per initial user favorite list
-		user_size = 50, //number of follower/following users per initial page load
+		listSize = 30, //num of tracks per initial user favorite list
+		userSize = 50, //number of follower/following users per initial page load
 		offset;
 	
+	//create methods for the info bar
 	var Info = {
 	
 		init: function ( config ) {
@@ -45,7 +46,9 @@ $(document).ready(function () {
 				self.info =  {
 					
 						username: data.username,
-						user_url: data.permalink_url
+						userUrl: data.permalink_url,
+						favorites: data.public_favorites_count,
+						avatar: data.avatar_url
 					
 				};
 				
@@ -80,11 +83,11 @@ $(document).ready(function () {
 			
 				SC.get (this.url, function(data) {
 
-					var no_description = data.description == "";
+					var noDescription = data.description == "";
 
 					var details = function() {
 
-						if (no_description) {
+						if (noDescription) {
 
 							return "No description.";
 
@@ -115,7 +118,7 @@ $(document).ready(function () {
 	
 	};
 	
-	//create methods for streaming activity
+	//create methods for SC player
 	var Player = {
 		
 		init: function(user) {
@@ -124,21 +127,21 @@ $(document).ready(function () {
 			
 			SC.get(url, {limit:1}, function(data) {
 				
-				$.map(data, function(track) {
+				jQuery.map(data, function(track) {
 					
-					track_url = "/tracks/" + track.id;
+					trackUrl = "/tracks/" + track.id;
 
 					Info.current.init({
 					
-						url: track_url,
-						template: $("#info-template").html(),
-						container: $("#current_track")
+						url: trackUrl,
+						template: jQuery("#info-template").html(),
+						container: jQuery("#current_track")
 						
 					});
 					
 					var widgetIframe = document.getElementById("sc-widget"),
 						widget = SC.Widget(widgetIframe),
-						widgetUrl = "http://w.soundcloud.com/player/?url=" + track_url;
+						widgetUrl = "http://w.soundcloud.com/player/?url=" + trackUrl;
 						
 						widget.load(widgetUrl, {
 						
@@ -151,9 +154,9 @@ $(document).ready(function () {
 					
 					Player.artwork.init({
 			
-						url: track_url,
-						template: $("#artwork-template").html(),
-						container: $("#artwork")
+						url: trackUrl,
+						template: jQuery("#artwork-template").html(),
+						container: jQuery("#artwork")
 						
 					});
 				
@@ -163,19 +166,19 @@ $(document).ready(function () {
 
 		},
 		
-		embed: function($track) {
+		embed: function(jQuerytrack) {
 			
 			var widgetIframe = document.getElementById("sc-widget"),
 				widget = SC.Widget(widgetIframe),
-				newWidgetId = $track[0].id,
-				track_url = "/tracks/" + newWidgetId;
-				newWidgetUrl = "http://w.soundcloud.com/player/?url=" + track_url,
-				nextWidgetId = $track.next().id,
+				widgetId = jQuerytrack[0].id,
+				trackUrl = "/tracks/" + widgetId;
+				widgetUrl = "http://w.soundcloud.com/player/?url=" + trackUrl,
+				nextWidgetId = jQuerytrack.next().id,
 				nextWidgetUrl = "http://w.soundcloud.com/player/?url=/tracks/" + nextWidgetId;
 				
 				 //widget.bind(SC.Widget.Events.FINISH, function() {
 				 
-					 widget.load(newWidgetUrl, {
+					 widget.load(widgetUrl, {
 					
 						show_artwork: false,
 						auto_play: true,
@@ -187,13 +190,13 @@ $(document).ready(function () {
 					
 				//});
 			
-			$("#artwork img").remove();
+			jQuery("#artwork img").remove();
 			
 			this.artwork.init({
 			
-				url: track_url,
-				template: $("#artwork-template").html(),
-				container: $("#artwork")
+				url: trackUrl,
+				template: jQuery("#artwork-template").html(),
+				container: jQuery("#artwork")
 				
 			});
 			
@@ -236,16 +239,16 @@ $(document).ready(function () {
 			
 			},
 			
-			fullsize: function(image_src) {
+			fullsize: function(imageSrc) {
 				
-				imgExists = image_src != "";
+				imgExists = imageSrc != "";
 
 				if (imgExists) {
 					
-					var art = image_src.replace("large","original");
+					var art = imageSrc.replace("large","original");
 
-					$("#content img").attr("src", art);
-					$("#lightbox").fadeIn(500);
+					jQuery("#content img").attr("src", art);
+					jQuery("#lightbox").fadeIn(500);
 
 				} else {
 
@@ -280,13 +283,13 @@ $(document).ready(function () {
 		
 			var self = this;
 			
-			SC.get("/users/" + this.user + "/followings", {limit: user_size}, function( data ) {
+			SC.get("/users/" + this.user + "/followings", {limit: userSize}, function( data ) {
 			
-				self.items = $.map( data, function( user ) {
+				self.items = jQuery.map( data, function( user ) {
 					
-					var has_favorites = user.public_favorites_count > 0;
+					var hasFavorites = user.public_favorites_count > 0;
 					
-					if ( has_favorites ) {
+					if ( hasFavorites ) {
 						
 						return {
 							
@@ -310,13 +313,13 @@ $(document).ready(function () {
 			
 			var self = this;
 			
-			SC.get("/users/" + this.user + "/followers", {limit: user_size, offset: offset}, function( data ) {
+			SC.get("/users/" + this.user + "/followers", {limit: userSize, offset: offset}, function( data ) {
 			
-				self.items = $.map( data, function( user ) {
+				self.items = jQuery.map( data, function( user ) {
 					
-					var has_favorites = user.public_favorites_count > 0;
+					var hasFavorites = user.public_favorites_count > 0;
 					
-					if ( has_favorites ) {
+					if ( hasFavorites ) {
 						
 						return {
 							
@@ -358,13 +361,13 @@ $(document).ready(function () {
 		
 			var self = this;
 			
-			SC.get("/users/" + this.user + "/followers", {limit: user_size}, function( data ) {
+			SC.get("/users/" + this.user + "/followers", {limit: userSize}, function( data ) {
 			
-				self.items = $.map( data, function( user ) {
+				self.items = jQuery.map( data, function( user ) {
 					
-					var has_favorites = user.public_favorites_count > 0;
+					var hasFavorites = user.public_favorites_count > 0;
 					
-					if ( has_favorites ) {
+					if ( hasFavorites ) {
 					
 						return {
 							
@@ -383,10 +386,10 @@ $(document).ready(function () {
 			
 			});
 			
-			$("#landing").hide("slow", "linear", function() {
+			jQuery("#landing").fadeOut("slow", "linear", function() {
 			
-				$("#soundcloud").fadeIn("slow", "linear");
-				$("footer").show();
+				jQuery("#soundcloud").fadeIn("slow", "linear");
+				jQuery("footer").show();
 			
 			});
 		
@@ -396,13 +399,13 @@ $(document).ready(function () {
 
 			var self = this;
 			
-			SC.get("/users/" + this.user + "/followers", {limit: user_size, offset: offset}, function( data ) {
+			SC.get("/users/" + this.user + "/followers", {limit: userSize, offset: offset}, function( data ) {
 			
-				self.items = $.map( data, function( user ) {
+				self.items = jQuery.map( data, function( user ) {
 					
-					var has_favorites = user.public_favorites_count > 0;
+					var hasFavorites = user.public_favorites_count > 0;
 					
-					if ( has_favorites ) {
+					if ( hasFavorites ) {
 						
 						return {
 							
@@ -431,7 +434,7 @@ $(document).ready(function () {
 			this.template = config.template;
 			this.container = config.container;		
 
-			$("#list a").remove();
+			jQuery("#list a").remove();
 			
 			this.fetch();
 		},
@@ -443,9 +446,9 @@ $(document).ready(function () {
 			
 			var self = this;
 			
-			SC.get( this.url, {limit: list_size}, function( data ) {
+			SC.get( this.url, {limit: listSize}, function( data ) {
 											
-				self.items = $.map( data, function( tracks ) {
+				self.items = jQuery.map( data, function( tracks ) {
 
 					var datestr = tracks.created_at,
 					date = datestr.substring(0,10),
@@ -459,7 +462,7 @@ $(document).ready(function () {
 							
 						} else {
 							
-							return replacement_img;
+							return replacementImg;
 						
 						}
 		
@@ -494,9 +497,9 @@ $(document).ready(function () {
 		
 			var self = this;
 			
-			SC.get( this.url, {limit: list_size, offset: offset }, function( data ) {
+			SC.get( this.url, {limit: listSize, offset: offset }, function( data ) {
 											
-				self.items = $.map( data, function( tracks ) {
+				self.items = jQuery.map( data, function( tracks ) {
 
 					var datestr = tracks.created_at,
 					date = datestr.substring(0,10),
@@ -510,7 +513,7 @@ $(document).ready(function () {
 							
 						} else {
 							
-							return replacement_img;
+							return replacementImg;
 						
 						}
 		
@@ -537,47 +540,48 @@ $(document).ready(function () {
 		}
 		
 	};
-
-	$(".connect").click(function() {
+	
+	//connect with soundcloud
+	jQuery(".connect").click(function() {
 		
 		SC.connect(function() {
 			
 			SC.get("/me", function(user) { 
 
-				var logged_in = user.id;
+				loggedIn = user.id;
 
 				Info.init({
 					
-					userid: logged_in,
-					template: $("#user-template").html(),
-					container: $("#userinfo")
+					userid: loggedIn,
+					template: jQuery("#user-template").html(),
+					container: jQuery("#userinfo")
 					
 				});
 
-				Player.init(logged_in);
+				Player.init(loggedIn);
 
 				//initialize the tracklist
 				List.init({
 				
-					url: "/users/" + logged_in + "/favorites",
-					template: $("#list-template").html(),
-					container: $("#list")
+					url: "/users/" + loggedIn + "/favorites",
+					template: jQuery("#list-template").html(),
+					container: jQuery("#list")
 					
 				});
 
 				Following.init({
 				
-					user: logged_in,
-					template: $("#following-template").html(),
-					container: $("#following")
+					user: loggedIn,
+					template: jQuery("#following-template").html(),
+					container: jQuery("#following")
 					
 				});
 
 				Followers.init({
 				
-					user: logged_in,
-					template: $("#followers-template").html(),
-					container: $("#followers")
+					user: loggedIn,
+					template: jQuery("#followers-template").html(),
+					container: jQuery("#followers")
 					
 				});
 
@@ -588,54 +592,54 @@ $(document).ready(function () {
 		
 	});
 	
-	$("#list").on("click", "a", function() {
+	jQuery("#list").on("click", "a", function() {
 		
-		$("#current_track span").remove();
+		jQuery("#current_track span").remove();
 
-		var $track = $(this),
-			track_url = "/tracks/" + this.id;
+		var jQuerytrack = jQuery(this),
+			trackUrl = "/tracks/" + this.id;
 		
-		Player.embed($track);
+		Player.embed(jQuerytrack);
 		
 		Info.current.init({
 		
-			url: track_url,
-			template: $("#info-template").html(),
-			container: $("#current_track")
+			url: trackUrl,
+			template: jQuery("#info-template").html(),
+			container: jQuery("#current_track")
 			
 		});
 
 	});		
 	
 	
-	$(".userlist").on("click", "a", function() {
+	jQuery(".userlist").on("click", "a", function() {
 		
-		$("#userinfo span").remove();
+		jQuery("#userinfo span").remove();
 		
 		var userid = this.id;
 		
 		Info.init({
 					
 			userid: userid,
-			template: $("#user-template").html(),
-			container: $("#userinfo")
+			template: jQuery("#user-template").html(),
+			container: jQuery("#userinfo")
 					
 		});
 		
 		//initialize the tracklist
 		List.init({
 			url: "/users/" + userid + "/favorites",
-			template: $("#list-template").html(),
-			container: $("#list")
+			template: jQuery("#list-template").html(),
+			container: jQuery("#list")
 		});
 		
-		$("html, body").animate({scrollTop:0}, "slow");
+		jQuery("html, body").animate({scrollTop:0}, "slow");
 		
 	});
 
-	$(".pagination").on("click", "a#list_page", function() {
+	jQuery(".pagination").on("click", "a#list_page", function() {
 		
-		var size = $("#list a").length;
+		var size = jQuery("#list a").length;
 		
 		offset = size;
 		
@@ -643,9 +647,9 @@ $(document).ready(function () {
 
 	});
 	
-	$(".pagination").on("click", "a#user_page", function() {
+	jQuery(".pagination").on("click", "a#user_page", function() {
 		
-		var size = $("#users a").length;
+		var size = jQuery("#users a").length;
 		
 		offset = size;
 		
@@ -654,24 +658,24 @@ $(document).ready(function () {
 
 	});
 	
-	$("#artwork").on("click", "img", function() {
+	jQuery("#artwork").on("click", "img", function() {
 	
-		var image_src = $(this).attr("src");
+		var imageSrc = jQuery(this).attr("src");
 		
-		Player.artwork.fullsize(image_src);
+		Player.artwork.fullsize(imageSrc);
 	
 	});
 
-	$("#list, #users, #info").tooltip( { tooltipClass: "custom-tooltip" } );
+	jQuery("#list, #users, #info").tooltip( { tooltipClass: "custom-tooltip" } );
 	
-	$("#lightbox").draggable()
+	jQuery("#lightbox").draggable()
 			
 		.on("click", ".close", function() { 
 				
-			$(this).parent().fadeOut(500);
+			jQuery(this).parent().fadeOut(500);
 					
 		});
 	
-	$("#info, #list, #users").click(function(){ $("#lightbox").fadeOut(500); });
+	jQuery("#info, #list, #users").click(function(){ jQuery("#lightbox").fadeOut(500); });
 	
 });
