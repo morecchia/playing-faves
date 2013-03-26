@@ -7,4 +7,3 @@ To do:
 2. Create pagination for track and user lists - replaces "add more tracks/users"
 3. Refactor Player
 4. Split soundcloud.js into separate modules - dguzzo's fork is an example
-5. 
