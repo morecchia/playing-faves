@@ -9,3 +9,4 @@ To do:
 4. Split soundcloud.js into separate modules - dguzzo's fork is an example
 5. Fill in missing tracks in the list - due to the track not being embeddable by all (i.e. check to see if there is a full list, add the necessary number of tracks needed to fill the list)
 6. Check current track/user links to see if following/favorited, remove the "Click to follow/favorite" if already done
+7. Add 'My Favorites' navigation
