@@ -2,7 +2,7 @@ jQuery(document).ready(function () {
 
 	// initialize the soundcloud api
 	SC.initialize({	
-		client_id: "2170b66abbf8f1381aedd4111f5c5a12",
+		client_id: "[CLIENT_ID]",
 		redirect_uri: "http://tonefolder.com/playing-faves/callback.html"
 	});
 	
